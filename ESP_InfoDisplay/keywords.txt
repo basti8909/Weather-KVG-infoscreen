@@ -1,0 +1,31 @@
+#######################################
+# Syntax Coloring Map For Timer Library
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+KVGlive			KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+readBusStop	KEYWORD2
+queryBusStop	KEYWORD2
+printBusStop	KEYWORD2
+calcDelay	KEYWORD2
+lastStop	KEYWORD2
+actualStop	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+apiLink	LITERAL1
+KVGstop LITERAL1
