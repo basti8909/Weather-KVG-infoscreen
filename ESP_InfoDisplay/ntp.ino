@@ -12,7 +12,7 @@
 
 #define NTP_SERVER_NAME   "time.nist.gov"
 #define NTP_LOCAL_PORT    8888
-#define NTP_TIME_ZONE     2
+#define NTP_TIME_ZONE     1
 #define NTP_PACKET_SIZE   48 // NTP time is in the first 48 bytes of message
 
 byte NTP_packetBuffer[NTP_PACKET_SIZE]; //buffer to hold incoming & outgoing packets
@@ -56,7 +56,14 @@ time_t NTP_getTime()
       secsSince1900 |= (unsigned long)NTP_packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)NTP_packetBuffer[43];
       setSyncInterval(3600);
-      return secsSince1900 - 2208988800UL + NTP_TIME_ZONE * 3600;
+      unsigned long epoch = secsSince1900 - 2208988800UL;   // convert to unix timestamp
+      epoch += 3600 * NTP_TIME_ZONE;                        // Add timezone
+      tmElements_t pretime;
+      breakTime(epoch,pretime);
+      int real_year=pretime.Year+1970;
+      // Check for DST
+      if (summertime_EU(real_year,pretime.Month,pretime.Day,pretime.Hour,1)) epoch+=3600;
+      return epoch;
     }
   }
   Serial.println("No NTP Response :-(");
@@ -86,13 +93,16 @@ void NTP_sendPacket(IPAddress &address)
   Udp.endPacket();
 }
 
-uint8_t NTP_DSTcheck()
+boolean summertime_EU(int year, byte month, byte day, byte hour, byte tzHours)
+// European Daylight Savings Time calculation by "jurs" for German Arduino Forum
+// input parameters: "normal time" for year, month, day, hour and tzHours (0=UTC, 1=MEZ)
+// return value: returns true during Daylight Saving Time, false otherwise
 {
- if (month()<3 || month()>10) return 0; // keine Sommerzeit in Jan, Feb, Nov, Dez
- if (month()>3 && month()<10) return 1; // Sommerzeit in Apr, Mai, Jun, Jul, Aug, Sep
- if ((month()==3 && day()>21) || (month()==9 && day()<21))
-   return 1;
- else
-   return 0;
+  if (month<3 || month>10) return false; // keine Sommerzeit in Jan, Feb, Nov, Dez
+  if (month>3 && month<10) return true; // Sommerzeit in Apr, Mai, Jun, Jul, Aug, Sep
+  if (month==3 && (hour + 24 * day)>=(1 + tzHours + 24*(31 - (5 * year /4 + 4) % 7)) || month==10 && (hour + 24 * day)<(1 + tzHours + 24*(31 - (5 * year /4 + 1) % 7)))
+    return true;
+  else
+    return false;
 }
 

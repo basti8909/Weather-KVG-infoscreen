@@ -45,6 +45,7 @@ class KVGliveAPI
   	{
   		static const int Wrangelstrasse = 105;
   		static const int Schauspielhaus = 150;
+      static const int WaitzHoltenauer = 25;
   		static const int BotanischerGarten = 268;
   		static const int HbfA1 = 9001;
   		static const int HbfA2 = 9002;

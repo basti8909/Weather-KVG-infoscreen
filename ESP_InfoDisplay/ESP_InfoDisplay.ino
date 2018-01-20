@@ -39,6 +39,7 @@
 #include <SPI.h>
 #include <String.h>
 #include <TimeLib.h>
+#include <Time.h>
 
 // ESP8266 WiFi connection
 #include <ESP8266WiFi.h>
@@ -89,8 +90,8 @@ uint32_t timerWifi;
 // when the digital clock was displayed
 uint32_t timerClock; 
 
-// Current display mode (0: 1st KVG stop, 1: 2nd KVG stop, 2: Weather screen)
-uint8_t mode = 2;
+// Current display mode (0: Weather screen, 1: 1st KVG stop, 2: 2nd KVG stop, ...)
+uint8_t mode = 0;
 
 
 // *** MAIN FUNCTIONS ***
@@ -134,7 +135,7 @@ void loop() {
   // Touch handling
   if (touch.isTouching()) {
     mode += 1;
-    if (mode == 3) mode = 0;
+    if (mode == 4) mode = 0;
     
     timerWifi = 0;
 
@@ -159,10 +160,24 @@ void loop() {
   {
     timerWifi = millis() + TIMER_INTERVAL_WIFI;
     int stopNr;
-    // Mode 0/1: Show KVG bus stop
-    if (mode < 2) {
-      if (mode == 0) {stopNr = KVGliveAPI::KVGstop::Wrangelstrasse;}
-      else {          stopNr = KVGliveAPI::KVGstop::Schauspielhaus;}  
+    // Mode 0: Show weather forecast
+    if (mode == 0) {
+      timerWifi = millis() + 3600000;
+      wscr.Draw();     
+    }
+    // Mode > 0: Show KVG bus stops
+    else {
+      switch (mode) {
+        case 1: 
+          stopNr = KVGliveAPI::KVGstop::Wrangelstrasse;
+          break;
+        case 2:
+          stopNr = KVGliveAPI::KVGstop::Schauspielhaus;
+          break;
+        case 3:
+          stopNr = KVGliveAPI::KVGstop::WaitzHoltenauer;
+          break;
+      } 
   
       if (KVG.queryBusStop(stopNr))
       {
@@ -170,18 +185,12 @@ void loop() {
         bus.Draw();
       }
     }
-    // Mode 2: Show weather forecast
-    else 
-    {
-      timerWifi = millis() + 3600000;
-      wscr.Draw();
-    }
     
 
   }
 
   // Clock display on KVG screens
-  if (timeStatus() != timeNotSet && mode != 2)
+  if (timeStatus() != timeNotSet && mode != 0)
   {
     if (millis() > timerClock)
     {
