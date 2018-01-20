@@ -359,30 +359,31 @@ void WeatherScreen::DrawTempGraph(int x,int y,int w,int h, float arr[])
 {
   
   int i,l = sizeof(arr);
-  float ymin=arr[0], ymax=arr[0];
+  float ymin=arr[0], ymax=arr[0], limLow, limHigh;
 
   for (i=0; i<48; i++)
   {
     if (arr[i] < ymin) ymin = arr[i];
     if (arr[i] > ymax) ymax = arr[i];    
   }
-  ymin = 5 * ((int)ymin / 5);
-  if (ymin < 0) ymin -= 5;
-  ymax = 5 * ((int)ymax / 5)+5;
+  limLow = 5 * ((int)ymin / 5);
+  if (ymin < 0) limLow -= 5;
+  limHigh = 5 * ((int)ymax / 5)+5;
+  if (ymax < 0) limHigh -= 5;
 
-  DrawGraphBG(x, y, w, h, ymin, ymax, 5, "Temperatur",false);
+  DrawGraphBG(x, y, w, h, limLow, limHigh, 5, "Temperatur",false);
   
   int x1, y1, x2, y2;
   float tempy;
   int deltax = w/47;  
   x1 = x;
-  tempy = ((arr[0]-ymin)/(ymax-ymin)) * h;
+  tempy = ((arr[0]-limLow)/(limHigh-limLow)) * h;
   y1 = y + h - tempy;
  
   for (int i=1; i<48; i++)
   {
     x2 = x1 + deltax;
-    tempy = ((arr[i]-ymin)/(ymax-ymin)) * h;
+    tempy = ((arr[i]-limLow)/(limHigh-limLow)) * h;
     y2 = y + h - tempy;  
       
     _Disp->drawLine(x1, y1+1, x2, y2+1, TFT_BLACK);
